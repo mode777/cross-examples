@@ -1,0 +1,27 @@
+{
+  "name": "cross-examples",
+  "version": "1.0.0",
+  "description": "Examples for cross framework",
+  "main": "main.ts",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mode777/cross-examples.git"
+  },
+  "keywords": [
+    "cross",
+    "typescript",
+    "webgl"
+  ],
+  "author": "Alexander Klingenbeck",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mode777/cross-examples/issues"
+  },
+  "homepage": "https://github.com/mode777/cross-examples#readme"
+}
