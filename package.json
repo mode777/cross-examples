@@ -7,7 +7,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node ./node_modules/gulp/bin/gulp.js"
   },
   "repository": {
     "type": "git",
@@ -23,5 +23,21 @@
   "bugs": {
     "url": "https://github.com/mode777/cross-examples/issues"
   },
-  "homepage": "https://github.com/mode777/cross-examples#readme"
+  "homepage": "https://github.com/mode777/cross-examples#readme",
+  "dependencies": {
+    "gl-matrix": "^2.3.2",
+    "pako": "^1.0.3",
+    "stats.js": "^0.16.0"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "connect": "^3.5.0",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.0.2",
+    "serve-static": "^1.11.1",
+    "tsify": "^1.0.7",
+    "typescript": "^2.0.3",
+    "typings": "^1.4.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
 }
