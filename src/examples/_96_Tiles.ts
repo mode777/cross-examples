@@ -3,37 +3,34 @@ import * as Eye from "../../cross/src/Eye";
 import * as Load from "../../cross/src/Load";
 import {vec3} from "gl-matrix";
 import Stats = require('stats.js');
+import {Example} from "../Example";
 
-export class _96_Tiles {
-    context: Eye.Context;
+export class _96_Tiles extends Example{
     shader: Eye.ShaderProgram;
     moveX = 0;
     moveY = 0;
     drawCalls: (() => void)[] = [];
     stats: Stats;
+    cam: Eye.OrthograficCamera;
+    x = 0;
+    y = 0;
 
     constructor() {
-        this.run();
+        super();
+        this.init();
     }
 
-    public handleDom(){
-        let canvas = <HTMLCanvasElement>document.getElementById("canvas");
-        canvas.onmousemove = (ev) => {
-            let rect = canvas.getBoundingClientRect();
+    createDom(){
+        this.canvas.onmousemove = (ev) => {
+            let rect = this.canvas.getBoundingClientRect();
             let x = ev.clientX - rect.left;
             let y = ev.clientY - rect.top;
             this.moveX = (-(rect.width/2 - x) / (rect.width /2))*2;
             this.moveY = (-(rect.height/2 - y) / (rect.height /2))*2;
         }
-        console.log(Stats);
-        let stats = this.stats = new Stats();
-        stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-        document.body.appendChild( stats.dom );
-
     }
     
-    public run() {
-        this.handleDom();
+    public load(finish: ()=>void) {
 
         Load.Assets.baseUrl = "assets/Tiles/"
 
@@ -46,13 +43,7 @@ export class _96_Tiles {
             "vertex.glsl",
             "lpc.json"
         ], (assets) => {
-
-            
-
-            let canvas = <HTMLCanvasElement>document.getElementById("canvas");
-            let context = this.context = new Eye.Context(canvas, { alpha: false });
-            
-            context.enableAlphaBlending();
+            this.gl.enableAlphaBlending();
 
             let tiled_map = <Tiled.Map>assets["lpc.json"];
             
@@ -63,15 +54,15 @@ export class _96_Tiles {
             //let uv = new Eye.Attribute("uv", 2);
             let attribConf = new Eye.AttributeConfiguration(position, uv);                               
 
-            let texture = new Eye.ImageTexture(context, map.tileSet.image, false);
-            //texture.filter = Eye.TextureFilterMode.Nearest;
+            let texture = new Eye.ImageTexture(this.gl, map.tileSet.image, false);
+            texture.filter = Eye.TextureFilterMode.Nearest;
             
-            let vertexShader = new Eye.Shader(context, Eye.ShaderType.Vertex, assets["vertex.glsl"]);
-            let fragmentShader = new Eye.Shader(context, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
-            let shader = this.shader = new Eye.ShaderProgram(context, vertexShader, fragmentShader);
+            let vertexShader = new Eye.Shader(this.gl, Eye.ShaderType.Vertex, assets["vertex.glsl"]);
+            let fragmentShader = new Eye.Shader(this.gl, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
+            let shader = this.shader = new Eye.ShaderProgram(this.gl, vertexShader, fragmentShader);
             
             
-            let cam = new Eye.OrthograficCamera(500, 500);
+            this.cam = new Eye.OrthograficCamera(this.element.clientWidth, this.element.clientHeight);
             //let matOrtho = mat4.ortho(mat4.create(), 0, 500, 500, 0, -10, 10);
 
             map.layers.forEach((layer,i)=>{
@@ -81,13 +72,13 @@ export class _96_Tiles {
                 store.setAttributes(position, positions);
                 store.setAttributes(uv, layer.createUVs(map.tileSet, true));
                 
-                let vbo = new Eye.VertexBuffer(context, store.buffer);
-                let ibo = new Eye.IndexBuffer(context, store.createQuadIndex());
+                let vbo = new Eye.VertexBuffer(this.gl, store.buffer);
+                let ibo = new Eye.IndexBuffer(this.gl, store.createQuadIndex());
 
                 this.drawCalls.push(() => {
                     vbo.bind();
                     shader.sendAttributes(attribConf);
-                    context.draw(Eye.PrimitiveType.Triangles, 0, ibo.count, ibo);
+                    this.gl.draw(Eye.PrimitiveType.Triangles, 0, ibo.count, ibo);
                 });
 
                 console.log(store.vertexCount);
@@ -96,27 +87,34 @@ export class _96_Tiles {
             
             shader.use();
             shader.sendTexture("texture", texture);
-            shader.sendMatrix4("projection", cam.projectionMatrix);
             //shader.sendVector2("size", vec2.fromValues(map.tileSet.image.width, map.tileSet.image.height));
 
             let x = 0, y = 0, speed = 0.3;
 
+            shader.sendMatrix4("projection", this.cam.projectionMatrix);
             let draw = () => {
-                this.stats.begin();
-
-                cam.position = vec3.fromValues(x-=this.moveX, y-=this.moveY, 0);
-                shader.sendMatrix4("view", cam.viewMatrix);
-                context.clear();
+                this.cam.position = vec3.fromValues(x-=this.moveX, y-=this.moveY, 0);
+                shader.sendMatrix4("view", this.cam.viewMatrix);
+                this.gl.clear();
                 this.drawCalls.forEach((func) => func());
-                
-                this.stats.end();
-                
-                requestAnimationFrame(draw);
             }
-
-            requestAnimationFrame(draw);
+            finish();
         });
 
+    }
+
+    draw(){
+        this.cam.position = vec3.fromValues(this.x-=this.moveX, this.y-=this.moveY, 0);
+        this.shader.sendMatrix4("view", this.cam.viewMatrix);
+        this.gl.clear();
+        this.drawCalls.forEach((func) => func());
+    }
+
+    resize() {
+        super.resize();
+        this.cam = new Eye.OrthograficCamera(this.element.clientWidth, this.element.clientHeight);
+        console.log(this.element.clientWidth, this.element.clientHeight);
+        this.shader.sendMatrix4("projection", this.cam.projectionMatrix);
     }
 }
 

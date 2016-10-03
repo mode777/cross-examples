@@ -1,16 +1,23 @@
 import * as Eye from "../../cross/src/Eye";
 import * as Load from "../../cross/src/Load";
 import {vec3} from "gl-matrix";
+import {Example} from "../Example";
 
-export class _04_PerspectiveCamera {
-    context: Eye.Context;
+export class _04_PerspectiveCamera extends Example {
     shader: Eye.ShaderProgram;
-    
+    attribConf: Eye.AttributeConfiguration;
+    vbo: Eye.VertexBuffer;
+    texture: Eye.Texture;
+    store: Eye.VertexStore;
+    camera: Eye.PerspectiveCamera;
+    z = 0;
+
     constructor() {
-        this.run();
+        super();
+        this.init();
     }
     
-    public run() {
+    public load(finish: ()=>void) {
 
         Load.Assets.baseUrl = "assets/PerspectiveCamera/"
 
@@ -23,14 +30,11 @@ export class _04_PerspectiveCamera {
             "stone1.gif"
         ], (assets) => {
 
-            let canvas = <HTMLCanvasElement>document.getElementById("canvas");
-            let context = this.context = new Eye.Context(canvas);
-
             let position = new Eye.Attribute("position", 2);
             let uv = new Eye.Attribute("uv", 2, Eye.DataType.UnsignedShort, true, true);
-            let attribConf = new Eye.AttributeConfiguration(position, uv);
+            let attribConf = this.attribConf = new Eye.AttributeConfiguration(position, uv);
             
-            let store = new Eye.VertexStore(4, attribConf);
+            let store = this.store = new Eye.VertexStore(4, attribConf);
             store.setAttributes(position, [
                 0.9, 0.9,
                 -0.9, 0.9, 
@@ -44,33 +48,37 @@ export class _04_PerspectiveCamera {
                 1.0, 1.0,
             ]);         
             
-            let vbo = new Eye.VertexBuffer(context, store.dataView.buffer);
+            let vbo = this.vbo = new Eye.VertexBuffer(this.gl, store.dataView.buffer);
 
-            let texture = new Eye.ImageTexture(context, assets["stone1.gif"]); 
+            let texture = this.texture = new Eye.ImageTexture(this.gl, assets["stone1.gif"]); 
 
-            let vertexShader = new Eye.Shader(context, Eye.ShaderType.Vertex, assets["vertex.glsl"]);
-            let fragmentShader = new Eye.Shader(context, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
-            let shader = this.shader = new Eye.ShaderProgram(context, vertexShader, fragmentShader);
+            let vertexShader = new Eye.Shader(this.gl, Eye.ShaderType.Vertex, assets["vertex.glsl"]);
+            let fragmentShader = new Eye.Shader(this.gl, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
+            let shader = this.shader = new Eye.ShaderProgram(this.gl, vertexShader, fragmentShader);
 
-            let camera = new Eye.PerspectiveCamera();
-            camera.position = vec3.fromValues(0,2,2);
-            
-            //draw
-            shader.use();
-            vbo.bind();
-            texture.bind(0);
-            
-            shader.sendAttributes(attribConf);
-            shader.sendTexture("texture0", texture);
-            shader.sendMatrix4("view", camera.viewMatrix);
-            shader.sendMatrix4("projection", camera.projectionMatrix);
+            let camera = this.camera = new Eye.PerspectiveCamera();
 
-            context.clear();
-            context.draw(Eye.PrimitiveType.TriangleStrip, 0, store.vertexCount);
-
+            finish();
         });
 
     }
+
+    draw(){
+        this.shader.use();
+        this.vbo.bind();
+        this.texture.bind(0);
+        
+        this.shader.sendAttributes(this.attribConf);
+        this.shader.sendTexture("texture0", this.texture);
+        
+        this.camera.position = vec3.fromValues(0,2,this.z+=.01);
+        this.shader.sendMatrix4("view", this.camera.viewMatrix);
+        this.shader.sendMatrix4("projection", this.camera.projectionMatrix);
+
+        this.gl.clear();
+        this.gl.draw(Eye.PrimitiveType.TriangleStrip, 0, this.store.vertexCount);
+    }
+
 }
 
 
