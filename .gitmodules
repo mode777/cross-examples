@@ -1,3 +1,4 @@
 [submodule "cross"]
 	path = cross
 	url = https://github.com/mode777/cross.git
+	branch = master
