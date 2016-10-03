@@ -1,47 +1,36 @@
-import {
-    Context, 
-    Attribute, 
-    AttributeConfiguration, 
-    VertexStore,
-    Shader,
-    ShaderProgram,
-    PrimitiveType, 
-    DataType, 
-    VertexBuffer, 
-    ImageTexture,
-    ShaderType
-} from "../../cross/src/Eye";
-import {Assets, TextLoader, ImageLoader} from "../../cross/src/Load";
+import * as Eye from "../../cross/src/Eye";
+import * as Load from "../../cross/src/Load";
+import {Example} from "../Example";
 
-export class _03_TexturedQuad {
-    context: Context;
-    shader: ShaderProgram;
+export class _03_TexturedQuad extends Example {
+    shader: Eye.ShaderProgram;
+    attribConf: Eye.AttributeConfiguration;
+    vbo: Eye.VertexBuffer;
+    texture: Eye.Texture;
+    store: Eye.VertexStore;
     
     constructor() {
-        this.run();
+        super();
+        this.init();
     }
     
-    public run() {
+    public load(finish: ()=>void) {
 
-        Assets.baseUrl = "assets/TexturedQuad/"
+        Load.Assets.baseUrl = "assets/TexturedQuad/"
 
-        Assets.registerLoader("glsl", TextLoader);
-        Assets.registerLoader("gif", ImageLoader);
+        Load.Assets.registerLoader("glsl", Load.TextLoader);
+        Load.Assets.registerLoader("gif", Load.ImageLoader);
 
-        Assets.load([
+        Load.Assets.load([
             "fragment.glsl",
             "vertex.glsl",
             "stone1.gif"
         ], (assets) => {
-
-            let canvas = <HTMLCanvasElement>document.getElementById("canvas");
-            let context = this.context = new Context(canvas);
-
-            let position = new Attribute("position", 2);
-            let uv = new Attribute("uv", 2, DataType.UnsignedShort, true, true);
-            let attribConf = new AttributeConfiguration(position, uv);
+            let position = new Eye.Attribute("position", 2);
+            let uv = new Eye.Attribute("uv", 2, Eye.DataType.UnsignedShort, true, true);
+            let attribConf = this.attribConf = new Eye.AttributeConfiguration(position, uv);
             
-            let store = new VertexStore(4, attribConf);
+            let store = this.store = new Eye.VertexStore(4, attribConf);
             store.setAttributes(position, [
                 0.9, 0.9,
                 -0.9, 0.9, 
@@ -55,27 +44,29 @@ export class _03_TexturedQuad {
                 1.0, 1.0,
             ]);         
             
-            let vbo = new VertexBuffer(context, store.dataView.buffer);
+            let vbo = this.vbo = new Eye.VertexBuffer(this.gl, store.dataView.buffer);
 
-            let texture = new ImageTexture(context, assets["stone1.gif"]); 
+            let texture = this.texture = new Eye.ImageTexture(this.gl, assets["stone1.gif"]); 
 
-            let vertexShader = new Shader(context, ShaderType.Vertex, assets["vertex.glsl"]);
-            let fragmentShader = new Shader(context, ShaderType.Fragment, assets["fragment.glsl"]);
-            let shader = this.shader = new ShaderProgram(context, vertexShader, fragmentShader);
+            let vertexShader = new Eye.Shader(this.gl, Eye.ShaderType.Vertex, assets["vertex.glsl"]);
+            let fragmentShader = new Eye.Shader(this.gl, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
+            let shader = this.shader = new Eye.ShaderProgram(this.gl, vertexShader, fragmentShader);
             shader.use();
-            
-            //draw
-            vbo.bind();
-            shader.sendAttributes(attribConf);
-            
-            texture.bind(0);
-            shader.sendTexture("texture0", texture);
 
-            context.clear();
-
-            context.draw(PrimitiveType.TriangleStrip, 0, store.vertexCount);
+            finish();
         });
+    }
 
+    draw(){
+        this.vbo.bind();
+        this.shader.sendAttributes(this.attribConf);
+        
+        this.texture.bind(0);
+        this.shader.sendTexture("texture0", this.texture);
+
+        this.gl.clear();
+
+        this.gl.draw(Eye.PrimitiveType.TriangleStrip, 0, this.store.vertexCount);
     }
 }
 

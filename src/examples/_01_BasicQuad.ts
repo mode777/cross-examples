@@ -1,69 +1,57 @@
-import {
-    Context,
-    Shader,
-    ShaderProgram,
-    Attribute,
-    AttributeConfiguration,
-    VertexStore,
-    ShaderType,
-    VertexBuffer,
-    PrimitiveType
-} from "../../cross/src/Eye";
+import * as Eye from "../../cross/src/Eye";
+import * as Load from "../../cross/src/Load";
+import {Example} from "../Example";
 
-import {
-    Assets,
-    TextLoader
-} from "../../cross/src/Load";
-
-export class _01_BasicQuad {
-    context: Context;
-    shader: ShaderProgram;
+export class _01_BasicQuad extends Example  {
+    shader: Eye.ShaderProgram;
+    vbo: Eye.VertexBuffer;
+    attributeConf: Eye.AttributeConfiguration;
+    store: Eye.VertexStore;
     
     constructor() {
-        this.run();
+        super();
+        this.init();
     }
-    
-    public run() {
 
-        Assets.baseUrl = "assets/BasicQuad/"
+    load(finish: () => void){
+        Load.Assets.baseUrl = "assets/BasicQuad/"
 
-        Assets.registerLoader("glsl", TextLoader);
+        Load.Assets.registerLoader("glsl", Load.TextLoader);
 
-        Assets.load([
+        Load.Assets.load([
             "fragment.glsl",
             "vertex.glsl",
         ], (assets) => {
 
-            let canvas = <HTMLCanvasElement>document.getElementById("canvas");
-            let context = this.context = new Context(canvas);
-
-            let position = new Attribute("position", 2);
-            let attribConf = new AttributeConfiguration(position);
+            let position = new Eye.Attribute("position", 2);
+            let attribConf = this.attributeConf = new Eye.AttributeConfiguration(position);
             
-            let store = new VertexStore(4, attribConf);
+            let store = this.store = new Eye.VertexStore(4, attribConf);
             store.setAttributes(position, [
                 0.9, 0.9,
                 -0.9, 0.9, 
                 0.9, -0.9,
                 -0.9, -0.9
             ]);    
-            let vbo = new VertexBuffer(context, store.buffer);
+            let vbo = this.vbo = new Eye.VertexBuffer(this.gl, store.buffer);
 
-            let vertexShader = new Shader(context, ShaderType.Vertex, assets["vertex.glsl"]);
-            let fragmentShader = new Shader(context, ShaderType.Fragment, assets["fragment.glsl"]);
-            let shader = this.shader = new ShaderProgram(context, vertexShader, fragmentShader);
+            let vertexShader = new Eye.Shader(this.gl, Eye.ShaderType.Vertex, assets["vertex.glsl"]);
+            let fragmentShader = new Eye.Shader(this.gl, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
+            let shader = this.shader = new Eye.ShaderProgram(this.gl, vertexShader, fragmentShader);
             shader.use();
-            
-            //draw
-            vbo.bind();
-            shader.sendAttributes(attribConf);
 
-            context.clear();
-            context.draw(PrimitiveType.TriangleStrip, 0, 4);
-
+            finish();
         });
-
     }
+    
+    draw() {
+        this.vbo.bind();
+        this.shader.sendAttributes(this.attributeConf);
+                    
+        this.gl.clear();
+        this.gl.draw(Eye.PrimitiveType.TriangleStrip, 0, this.store.vertexCount);      
+    }
+
 }
 
 

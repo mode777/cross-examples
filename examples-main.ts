@@ -1,7 +1,10 @@
 import * as Examples from "./src/examples";
 
 window.onload = () => {
-    let select = <HTMLSelectElement>document.getElementById("select");
+    let select = document.createElement("select");
+    select.id = "select";
+    document.body.appendChild(select);
+
     let examples = <any>Examples;
     let app: any;
     
@@ -9,7 +12,7 @@ window.onload = () => {
         let screenName = name.replace(/_/g, " ");
         let option = new Option(screenName, name);
         select.appendChild(option);
-    }
+    } 
 
     select.onchange = (ev) => {
         window.location.hash = select.value;

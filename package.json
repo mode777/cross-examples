@@ -7,7 +7,7 @@
     "example": "examples"
   },
   "scripts": {
-    "build": "node ./node_modules/gulp/bin/gulp.js"
+    "build": "node ./node_modules/gulp/bin/gulp.js build"
   },
   "repository": {
     "type": "git",

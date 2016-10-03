@@ -5,16 +5,28 @@ var browserify = require("browserify");
 var source = require('vinyl-source-stream');
 var tsify = require("tsify");
 
-gulp.task("default", function () {
-    return browserify({
+gulp.task("build", function () {
+    let bundle = browserify({
         basedir: '.',
         debug: true,
         entries: ['./examples-main.ts'],
         cache: {},
         packageCache: {}
     })
-    .plugin(tsify, { global: true })
+    .plugin(tsify)
     .bundle()
+    .on('error',function(e){
+        console.log(e);
+        this.emit("end");
+    });
+
+    bundle
     .pipe(source('bundle.js'))
-    .pipe(gulp.dest("dist"));
+    .pipe(gulp.dest("dist"))
 });
+
+gulp.task('watch',["build"], function(){
+    gulp.watch('src/**/*.ts', ['build'])
+});
+
+gulp.task('default', ['watch']);
