@@ -6,7 +6,7 @@ var source = require('vinyl-source-stream');
 var tsify = require("tsify");
 
 gulp.task("build", function () {
-    let bundle = browserify({
+    var bundle = browserify({
         basedir: '.',
         debug: true,
         entries: ['./examples-main.ts'],
