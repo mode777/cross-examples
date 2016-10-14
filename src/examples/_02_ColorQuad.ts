@@ -46,6 +46,8 @@ export class _02_ColorQuad extends Example {
             let fragmentShader = new Eye.Shader(this.gl, Eye.ShaderType.Fragment, assets["fragment.glsl"]);
             let shader = this.shader = new Eye.ShaderProgram(this.gl, vertexShader, fragmentShader);
             shader.use();
+
+            
             
             finish();
         });
